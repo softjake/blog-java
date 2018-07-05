@@ -1,2 +1,3 @@
-# blog-java
-Repository for softjake blogs java code 
+# Softjake blog java code
+
+## This is where you find the Softjake blog java code. 
