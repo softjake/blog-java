@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 public class SyncToRxApi {
 
 
+    @SuppressWarnings("Duplicates")
     Flowable<Member> getMemberListAsFlowable(String filename) {
         return Single.<String>create(emitter -> {
             try {
@@ -34,6 +35,7 @@ public class SyncToRxApi {
     }
 
 
+    @SuppressWarnings("Duplicates")
     Flowable<Member> getMemberListAntiPattern(String filename) {
         String members = "";
         try {
