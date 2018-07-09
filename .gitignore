@@ -3,6 +3,10 @@
 # Compiled class file
 *.class
 
+# specific files
+src/**/RxSampleStream*.java
+scratch.txt
+
 # Log file
 *.log
 

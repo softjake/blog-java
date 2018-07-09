@@ -22,11 +22,14 @@ public class AsyncToRxApiTest {
     }
 
     @Test
-    public void givenLoadAsyncAsFlowable_whenSubscribing_thenWaitForCompleted()
+    public void testingGetMemberListAsyncAsFlowableAndSleep()
       throws InterruptedException {
+        //given
         this.sample
           .getMemberListAsyncAsFlowable()
+          //when
           .subscribe(member -> {
+                //then
                 System.out.println(member);
                 Assert.assertNotEquals("Member last name is empty.",
                   "", member.getLastName());
@@ -36,12 +39,15 @@ public class AsyncToRxApiTest {
     }
 
     @Test
-    public void givenLoadAsyncAsFlowable_whenSubscribing_thenLatchOnCompleted()
+    public void testingGetMemberListAsyncAsFlowableAndLatch()
       throws InterruptedException {
+        //given
         CountDownLatch latch = new CountDownLatch(1);
         this.sample
           .getMemberListAsyncAsFlowable()
+          //when
           .subscribe(
+            //then
             member -> {
                 System.out.println(member);
                 Assert.assertNotEquals("Member last name is empty.",

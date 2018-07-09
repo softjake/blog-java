@@ -28,13 +28,16 @@ public class RxToRxApiTest {
 
 
     @Test
-    public void givenMemberList_whenRxLoadedAsFlowable_thenReturnMemberAsFlowable()
+    public void testingGetMemberListAsFlowable()
       throws InterruptedException {
+        //given
         CountDownLatch latch = new CountDownLatch(1);
         sample
-          .getMembersListAsFlowable("src/test/resources/members.json")
+          .getMemberListAsFlowable("src/test/resources/members.json")
+          //when
           .subscribe(
             member -> {
+                //then
                 System.out.println(member);
                 Assert.assertNotEquals("Member last name is empty.",
                   "", member.getLastName());
@@ -45,12 +48,15 @@ public class RxToRxApiTest {
     }
 
     @Test
-    public void givenMemberJsonArray_whenRxLoadedAsFlowable_thenReturnMemberAsFlowable()
+    public void testingGetMemberArrayAsFlowable()
       throws InterruptedException {
+        //given
         CountDownLatch latch = new CountDownLatch(1);
         sample
-          .getMemberRxArrayAsFlowable("src/test/resources/members.json")
+          .getMemberArrayAsFlowable("src/test/resources/members.json")
+          //when
           .subscribe(
+            //then
             member -> {
                 System.out.println(member);
                 Assert.assertNotEquals("Member last name is empty.",

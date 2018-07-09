@@ -37,14 +37,14 @@ public class RxToRxApi {
           .map(content -> new JsonArray(content));
     }
 
-    Flowable<Member> getMemberRxArrayAsFlowable(String filepath) {
+    Flowable<Member> getMemberArrayAsFlowable(String filepath) {
         return getMembersAsArray(filepath)
           .flatMapPublisher(array -> Flowable.fromIterable(array))
           .cast(JsonObject.class)
           .map(json -> json.mapTo(Member.class));
     }
 
-    Flowable<Member> getMembersListAsFlowable(String filepath) {
+    Flowable<Member> getMemberListAsFlowable(String filepath) {
         Vertx vertx = Vertx.vertx();
         FileSystem fileSystem = vertx.fileSystem();
         return fileSystem

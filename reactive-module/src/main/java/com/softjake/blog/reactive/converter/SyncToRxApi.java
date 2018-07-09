@@ -8,22 +8,29 @@ import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public class SyncToRxApi {
 
 
-    @SuppressWarnings("Duplicates")
+    String fetchMemberListAsString(String filename)
+      throws NullPointerException, IOException {
+
+        ClassLoader cl = getClass().getClassLoader();
+        File file = new File(cl
+          .getResource(filename)
+          .getFile());
+        String result = FileUtils.readFileToString(file,
+          StandardCharsets.UTF_8);
+        return result;
+    }
+
+
     Flowable<Member> getMemberListAsFlowable(String filename) {
         return Single.<String>create(emitter -> {
             try {
-                ClassLoader cl = getClass().getClassLoader();
-                File file = new File(cl
-                  .getResource(filename)
-                  .getFile());
-                String members = FileUtils.readFileToString(file,
-                  StandardCharsets.UTF_8);
-                emitter.onSuccess(members);
+                emitter.onSuccess(fetchMemberListAsString(filename));
             } catch (Exception e) {
                 emitter.onError(e);
             }
@@ -35,15 +42,10 @@ public class SyncToRxApi {
     }
 
 
-    @SuppressWarnings("Duplicates")
-    Flowable<Member> getMemberListAntiPattern(String filename) {
+    Flowable<Member> getMemberListWithAntiPattern(String filename) {
         String members = "";
         try {
-            ClassLoader cl = getClass().getClassLoader();
-            File file = new File(cl
-              .getResource(filename)
-              .getFile());
-            members = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+            members = fetchMemberListAsString(filename);
         } catch (Exception e) {
             System.out.println("Error on read: \n" + e.getMessage());
         }
