@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
 public class SyncSampleStreamTest {
-//----
+
     private SyncSampleStream sample;
     private File memberFile = null;
 

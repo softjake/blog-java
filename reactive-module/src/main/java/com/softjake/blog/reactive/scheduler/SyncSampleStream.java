@@ -13,7 +13,6 @@ import java.util.List;
 
 public class SyncSampleStream {
 
-//---
     Observable<String> getMemberListAsObservableString(File source) {
         return Observable.<String>create(emitter -> {
             try {
