@@ -13,22 +13,41 @@ import java.util.List;
 
 public class SyncSampleStream {
 
-    Observable<String> getMemberListAsObservableString(File source) {
-        return Observable.<String>create(emitter -> {
+    void printThread(String title) {
+        System.out.println(String.format("%s thread: %s",
+          title, Thread.currentThread().getName()));
+    }
+
+    File getFileObject(String filename) {
+        ClassLoader cl = getClass().getClassLoader();
+        return new File(cl.getResource(filename).getFile());
+    }
+
+    String fetchFileAsString(String filename) throws IOException {
+        printThread(String.format("Fetch %s from", filename));
+        return FileUtils.readFileToString(getFileObject(filename),
+          StandardCharsets.UTF_8);
+    }
+
+
+    Observable<String> getMemberListAsObservableString(String filename) throws InterruptedException {
+        printThread(String.format("Source name: %s", filename));
+        Observable<String> observable = Observable.<String>create(emitter -> {
             try {
-                String members = FileUtils.readFileToString(source,
-                  StandardCharsets.UTF_8);
-                emitter.onNext(members);
+                String content = fetchFileAsString(filename);
+                emitter.onNext(content);
             } catch (Exception e) {
+                System.out.println(e.getMessage());
                 emitter.onError(e);
             }
             emitter.onComplete();
         });
+        return observable;
     }
 
     Observable<Member> getEachMemberAsObservableItem(File source)
       throws IOException {
-
+        printThread(String.format("Fetching %s from", source.getName()));
         return Observable.<Member>create(emitter -> {
             try {
                 ObjectMapper mapper = new ObjectMapper();   //---1---
@@ -42,18 +61,13 @@ public class SyncSampleStream {
                     emitter.onNext(member);
                 });
             } catch (IOException e) {
-                printThread("Emitter for onError = ");
+                printThread("Emitter for onError =");
                 emitter.onError(e);
                 return;
             }
-            printThread("Emitter for onComplete = ");
+            printThread("Emitter for onComplete =");
             emitter.onComplete();
         });
-    }
-
-    void printThread(String title) {
-        System.out.println(String.format("%s thread: %s",
-          title, Thread.currentThread().getName()));
     }
 
 }

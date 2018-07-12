@@ -2,6 +2,7 @@ package com.softjake.blog.reactive.scheduler;
 
 import com.softjake.blog.reactive.model.Member;
 import io.reactivex.Observable;
+import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -21,11 +22,10 @@ public class SyncSampleStreamTest {
 
     @Before
     public void setUp() throws Exception {
-        if (this.memberFile == null) {
-            ClassLoader cl = getClass().getClassLoader();
-            this.memberFile = new File(cl.getResource("members.json").getFile());
-        }
         sample = new SyncSampleStream();
+        if (this.memberFile == null) {
+            this.memberFile = sample.getFileObject("members.json");
+        }
     }
 
     @After
@@ -33,17 +33,37 @@ public class SyncSampleStreamTest {
         sample = null;
     }
 
+//    void printThread(String title) {
+//        System.out.println(String.format("%s thread: %s",
+//          title, Thread.currentThread().getName()));
+//    }
+//
+//    File getFileObject(String filename) {
+//        ClassLoader cl = getClass().getClassLoader();
+//        return new File(cl.getResource(filename).getFile());
+//    }
 
     @Test
-    public void testGetMemberListAsObservableString() throws InterruptedException {
+    public void testingFetchFileAsString() throws IOException {
+        String content = sample.fetchFileAsString("members.json");
+        Assert.assertNotEquals("", content);
+        Assert.assertNotEquals(0, content.length());
+    }
+
+
+    @Test
+    public void testingGetMemberListAsObservableString()
+      throws InterruptedException {
+        //given
         CountDownLatch latch = new CountDownLatch(1);
         sample
-          .getMemberListAsObservableString(memberFile)
+          .getMemberListAsObservableString("members.json")
           .map(list -> new JsonArray(list))
           .flatMap(array -> Observable.fromIterable(array))
           .cast(JsonObject.class)
           .map(json -> json.mapTo(Member.class))
-          .subscribe(member -> {
+          //when
+          .subscribe(member -> {    //then
                 System.out.println(String.format("From %s = %s",
                   Thread.currentThread().getName(), member.toString()));
                 Assert.assertNotEquals("Member last name is empty.",
@@ -55,22 +75,17 @@ public class SyncSampleStreamTest {
     }
 
 
-    void printThread(String title) {
-        System.out.println(String.format("%s thread: %s\n",
-          title, Thread.currentThread().getName()));
-    }
-
-
+    ///////// GEMAOI = GetEachMemberAsObservableItem
     @Test
-    public void givenSubscribeOnMain_whenNoChange_thenResult()
+    public void testingGEMAOI_Main()
       throws IOException, InterruptedException {
-
+        //given
         CountDownLatch latch = new CountDownLatch(1);
-        printThread("Subscribe thread = ");
-
+        sample.printThread("Subscribe from getEachMemberAsObservableItemTest ");
+        //when
         sample.getEachMemberAsObservableItem(memberFile)
-          .subscribe(member -> {
-                printThread(String.format(
+          .subscribe(member -> {        //then
+                sample.printThread(String.format(
                   "Observer for %s = thread: ", member.getEmail()));
             },
             Throwable::getMessage,
@@ -78,17 +93,18 @@ public class SyncSampleStreamTest {
         latch.await();
     }
 
+    ///////// GEMAOI = GetEachMemberAsObservableItem
     @Test
-    public void givenSubscribeOnIo_whenNoChange_thenResult()
+    public void testingGEMAOI_Io()
       throws IOException, InterruptedException {
-
+        //given
+        sample.printThread("Subscribe from getEachMemberAsObservableItemTest ");
         CountDownLatch latch = new CountDownLatch(1);
-        printThread("Subscribe");
-
         sample.getEachMemberAsObservableItem(memberFile)
           .subscribeOn(Schedulers.io())  //---1---
-          .subscribe(member -> {
-                printThread(String.format(
+          //when
+          .subscribe(member -> {  //then
+                sample.printThread(String.format(
                   "Observer for %s = thread: ", member.getEmail()));
             },
             Throwable::getMessage,
@@ -96,18 +112,20 @@ public class SyncSampleStreamTest {
         latch.await();
     }
 
+    ///////// GEMAOI = GetEachMemberAsObservableItem
     @Test
-    public void givenSubscribeOnIo_whenChangeToSingle_thenResult()
+    public void testingGEMAOI_Io_Single()
       throws IOException, InterruptedException {
-
+        //given
         CountDownLatch latch = new CountDownLatch(1);
-        printThread("Subscribe");
+        sample.printThread("Subscribe from getEachMemberAsObservableItemTest ");
 
         sample.getEachMemberAsObservableItem(memberFile)
           .subscribeOn(Schedulers.io())  //---1---
           .observeOn(Schedulers.single())
-          .subscribe(member -> {
-                printThread(String.format(
+          //when
+          .subscribe(member -> {  //then
+                sample.printThread(String.format(
                   "Observer for %s = thread: ", member.getEmail()));
             },
             Throwable::getMessage,
@@ -116,4 +134,75 @@ public class SyncSampleStreamTest {
     }
 
 
+    @Test
+    public void testingScheduling_Sequential()
+      throws IOException, InterruptedException {
+        //given...
+        String[] regions = {"East", "West", "Down"};
+        CountDownLatch latch = new CountDownLatch(1);
+//        sample.printThread("From testingScheduling_Sequential");
+
+        Observable<String> observable = Observable.fromArray(regions)
+          .map(region -> String.format("members-%swood.json", region.toLowerCase()))
+          .doOnEach(regionName -> sample.printThread(String.format("Submit region %s", regionName.getValue())))
+          .observeOn(Schedulers.io())
+          .map(regionName ->
+            sample.fetchFileAsString(regionName))
+          .subscribeOn(Schedulers.single())
+          .observeOn(Schedulers.single());
+
+
+        sample.printThread("From testingScheduling_Sequential subscribe");
+        observable
+          //when...
+//          .map(list -> new JsonArray(list))
+//          .flatMap(array -> Observable.fromIterable(array))
+//          .cast(JsonObject.class)
+//          .map(json -> json.mapTo(Member.class))
+          .subscribe(list -> {       //then...
+              sample.printThread(String.format("Print members..."));
+              System.out.println(list);
+            },
+            Throwable::getMessage,
+            () -> latch.countDown()
+          );
+        latch.await();
+    }
+
+
+    @Test
+    public void testingScheduling_Concurrent() throws InterruptedException {
+        //given
+        String[] regions = {"East", "West", "Down"};
+        CountDownLatch latch = new CountDownLatch(1);
+
+        Observable<String> observable = Observable.fromArray(regions)
+          .map(region -> String.format("members-%swood.json", region.toLowerCase()))
+          .doOnEach(regionName -> sample.printThread(String.format("Submit region %s",
+                        regionName.getValue())))
+          .flatMap(regionName ->
+              Observable.just(regionName)
+                .subscribeOn(Schedulers.io())
+//              .map(this::fetchFileAsString)
+                .map(new Function<String, String>() {
+                    @Override
+                    public String apply(String t) throws Exception {
+                        return sample.fetchFileAsString(t);
+                    }
+                })
+          ).observeOn(Schedulers.single());
+
+        sample.printThread("From testingScheduling_Concurrent subscribe");
+        observable
+          .subscribeOn(Schedulers.computation())
+          .subscribe(list -> {
+                sample.printThread("Print members");
+                System.out.println(list);
+            },
+            Throwable::getMessage,
+            () -> latch.countDown()
+          );
+        latch.await();
+    }
 }
+
