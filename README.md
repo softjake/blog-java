@@ -3,7 +3,9 @@
 ## This is where you find the Softjake blog java code. 
 
 [RxJava2: Sync / Async APIs to reactive][1]
+
 [RxJava2: Schedulers 101 or simplified concurrency, part 1.][2]
+
 [RxJava2: Schedulers 101 or simplified concurrency, part 2.][3]
 
 
